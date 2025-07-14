@@ -297,15 +297,71 @@ function findCorrespondingLightDarkStyle(sourceStyleName, targetStyles, targetLi
   }
 }
 
+// Experimental function to try accessing team library styles
+async function tryAccessTeamLibraryStyles() {
+  console.log('=== EXPERIMENTAL: TRYING TO ACCESS TEAM LIBRARY STYLES ===');
+  
+  try {
+    // Try to get all available styles in different ways
+    console.log('Trying figma.getLocalPaintStylesAsync()...');
+    const localPaintStyles = await figma.getLocalPaintStylesAsync();
+    console.log('Local paint styles:', localPaintStyles.length);
+    
+    console.log('Trying figma.getLocalTextStylesAsync()...');
+    const localTextStyles = await figma.getLocalTextStylesAsync();
+    console.log('Local text styles:', localTextStyles.length);
+    
+    // Check if there are any other methods available
+    console.log('Available figma methods:', Object.getOwnPropertyNames(figma).filter(name => name.includes('Style')));
+    
+    // Try to access styles through the current page
+    const selection = figma.currentPage.selection;
+    if (selection.length > 0) {
+      const firstNode = selection[0];
+      console.log('Checking first selected node for style information...');
+      console.log('Node fillStyleId:', firstNode.fillStyleId, 'Type:', typeof firstNode.fillStyleId);
+      console.log('Node strokeStyleId:', firstNode.strokeStyleId, 'Type:', typeof firstNode.strokeStyleId);
+      console.log('Node textStyleId:', firstNode.textStyleId, 'Type:', typeof firstNode.textStyleId);
+      
+      // Try to resolve these style IDs
+      if (firstNode.fillStyleId) {
+        try {
+          const fillStyle = await figma.getStyleByIdAsync(firstNode.fillStyleId);
+          console.log('Fill style resolved:', fillStyle ? fillStyle.name : 'null');
+        } catch (e) {
+          console.log('Failed to resolve fill style:', e.message);
+        }
+      }
+    }
+    
+  } catch (error) {
+    console.log('Error in experimental team library access:', error);
+  }
+}
+
 // Function to find referenced styles (including team library styles)
 async function findReferencedStyles() {
   const referencedStyles = new Set();
   
+  console.log('=== FINDING REFERENCED STYLES ===');
+  console.log('Document pages:', figma.root.children.length);
+  
   try {
-    // Search through all pages and frames to find style references
+    // First, check the current selection for style IDs (this is most reliable for team library styles)
+    const selection = figma.currentPage.selection;
+    console.log('Checking current selection for style IDs...');
+    for (const node of selection) {
+      await findStylesInNode(node, referencedStyles);
+    }
+    console.log('Style IDs found in selection:', referencedStyles.size);
+    
+    // Then search through all pages and frames to find style references
     for (const page of figma.root.children) {
+      console.log('Searching page:', page.name);
       await findStylesInNode(page, referencedStyles);
     }
+    console.log('Total referenced style IDs found:', referencedStyles.size);
+    console.log('Referenced style IDs:', Array.from(referencedStyles));
   } catch (error) {
     console.log('Error finding referenced styles:', error);
   }
@@ -330,15 +386,36 @@ async function findReferencedStyles() {
       
       const style = await figma.getStyleByIdAsync(styleId);
       if (style) {
+        console.log('Successfully resolved style:', style.name, 'Type:', style.type, 'ID:', style.id);
         if (style.type === 'PAINT') {
           paintStyles.push(style);
+          console.log('Added paint style:', style.name);
         } else if (style.type === 'TEXT') {
           textStyles.push(style);
+          console.log('Added text style:', style.name);
+        }
+      } else {
+        console.log('Style resolution returned null for ID:', styleId);
+        // Try alternative method for team library styles
+        try {
+          console.log('Attempting to import team library style with key:', styleId);
+          const importedStyle = await figma.importStyleByKeyAsync(styleId);
+          if (importedStyle) {
+            console.log('Successfully imported team library style:', importedStyle.name);
+            if (importedStyle.type === 'PAINT') {
+              paintStyles.push(importedStyle);
+            } else if (importedStyle.type === 'TEXT') {
+              textStyles.push(importedStyle);
+            }
+          }
+        } catch (importError) {
+          console.log('Failed to import team library style:', importError.message);
         }
       }
     } catch (error) {
       console.log('Error getting style by ID:', styleId, error);
       console.log('Error details:', error.message);
+      console.log('This might be a team library style that needs importing');
     }
   }
   
@@ -397,13 +474,22 @@ async function changeBrandColors(data, fromBrand, targetTheme, targetLightDark) 
     console.log('Starting brand change to:', targetTheme, 'with light/dark:', targetLightDark);
     
     // Get all available paint and text styles (local and remote) to find all brand styles
-    const allStyles = await figma.getLocalPaintStylesAsync();
+    console.log('=== GATHERING ALL STYLES FOR BRAND CHANGE ===');
+    const localPaintStyles = await figma.getLocalPaintStylesAsync();
     const localTextStyles = await figma.getLocalTextStylesAsync();
     const referencedStyles = await findReferencedStyles();
     
+    console.log('Local paint styles:', localPaintStyles.length);
+    console.log('Local text styles:', localTextStyles.length);
+    console.log('Referenced paint styles:', referencedStyles.paintStyles.length);
+    console.log('Referenced text styles:', referencedStyles.textStyles.length);
+    
     // Combine local and referenced styles
-    const combinedPaintStyles = [...allStyles, ...referencedStyles.paintStyles];
+    const combinedPaintStyles = [...localPaintStyles, ...referencedStyles.paintStyles];
     const combinedTextStyles = [...localTextStyles, ...referencedStyles.textStyles];
+    
+    console.log('Total combined paint styles:', combinedPaintStyles.length);
+    console.log('Total combined text styles:', combinedTextStyles.length);
     
     const toyotaPaintStyles = combinedPaintStyles.filter(style => style.name.includes('Toyota/'));
     const lexusPaintStyles = combinedPaintStyles.filter(style => style.name.includes('Lexus/'));
@@ -683,14 +769,44 @@ async function getStylesFromSelection() {
   }
   
   // Debug: List all available styles
-  console.log('=== AVAILABLE STYLES ===');
+  console.log('=== AVAILABLE STYLES DEBUG ===');
+  
+  // Run experimental team library access
+  await tryAccessTeamLibraryStyles();
+  
   try {
     const allPaintStyles = await figma.getLocalPaintStylesAsync();
     const allTextStyles = await figma.getLocalTextStylesAsync();
     const referencedStyles = await findReferencedStyles();
     
-    console.log('Available paint styles:', allPaintStyles.length + referencedStyles.paintStyles.length);
-    console.log('Available text styles:', allTextStyles.length + referencedStyles.textStyles.length);
+    console.log('LOCAL paint styles found:', allPaintStyles.length);
+    console.log('LOCAL text styles found:', allTextStyles.length);
+    console.log('REFERENCED paint styles found:', referencedStyles.paintStyles.length);
+    console.log('REFERENCED text styles found:', referencedStyles.textStyles.length);
+    console.log('TOTAL paint styles:', allPaintStyles.length + referencedStyles.paintStyles.length);
+    console.log('TOTAL text styles:', allTextStyles.length + referencedStyles.textStyles.length);
+    
+    // Log local styles
+    console.log('=== LOCAL PAINT STYLES ===');
+    allPaintStyles.forEach(style => {
+      console.log('LOCAL Paint Style:', style.name, 'ID:', style.id, 'Type:', style.type);
+    });
+    
+    console.log('=== LOCAL TEXT STYLES ===');
+    allTextStyles.forEach(style => {
+      console.log('LOCAL Text Style:', style.name, 'ID:', style.id, 'Type:', style.type);
+    });
+    
+    // Log referenced/remote styles
+    console.log('=== REFERENCED/REMOTE PAINT STYLES ===');
+    referencedStyles.paintStyles.forEach(style => {
+      console.log('REMOTE Paint Style:', style.name, 'ID:', style.id, 'Type:', style.type);
+    });
+    
+    console.log('=== REFERENCED/REMOTE TEXT STYLES ===');
+    referencedStyles.textStyles.forEach(style => {
+      console.log('REMOTE Text Style:', style.name, 'ID:', style.id, 'Type:', style.type);
+    });
     
     [...allPaintStyles, ...referencedStyles.paintStyles].forEach(style => {
       console.log('Paint Style:', style.name, 'ID:', style.id);
