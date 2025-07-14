@@ -1,6 +1,6 @@
 # Toyota Style Switcher
 
-A Figma plugin that allows designers to quickly switch between Toyota, Lexus, and Subaru brand styles and light/dark themes for selected design elements.
+A Figma plugin that allows designers to quickly switch between Toyota, Lexus, and Subaru brand styles and light/dark themes for selected design elements. The plugin automatically changes both color and text styles when properly configured from the Atoms Design System.
 
 ## Installation
 
@@ -29,7 +29,7 @@ This ensures the plugin has access to all Toyota, Lexus, and Subaru styles neede
 
 ## Overview
 
-The Toyota Style Switcher plugin streamlines the process of adapting designs across different automotive brands within the Toyota family. It automatically identifies and replaces brand-specific color and text styles while maintaining design integrity.
+The Toyota Style Switcher plugin streamlines the process of adapting designs across different automotive brands within the Toyota family. It automatically identifies and replaces brand-specific color and text styles while maintaining design integrity. When text styles are properly set up from the Atoms Design System, the plugin will also update typography to match the selected brand.
 
 ## Features
 
@@ -37,6 +37,7 @@ The Toyota Style Switcher plugin streamlines the process of adapting designs acr
 - **Multi-brand Support**: Switch between Toyota, Lexus, and Subaru styles
 - **Intelligent Detection**: Automatically identifies current brand styles in selected elements
 - **Bulk Operations**: Apply changes to multiple elements and their children simultaneously
+- **Font Style Updates**: Automatically changes text styles and typography when configured from Atoms Design System
 
 ### Theme Switching
 - **Light/Dark Modes**: Toggle between light and dark theme variants
