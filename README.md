@@ -82,22 +82,25 @@ The plugin works with styles that follow this naming pattern:
 ## Installation
 
 1. Download the plugin files
-2. **Optional**: Add a custom logo by placing an `icon.svg` or `icon.png` file in the plugin directory
-3. In Figma, go to Plugins → Development → Import plugin from manifest
-4. Select the `manifest.json` file
-5. The plugin will appear in your Plugins menu
+2. In Figma, go to Plugins → Development → Import plugin from manifest
+3. Select the `manifest.json` file
+4. The plugin will appear in your Plugins menu
 
-### Plugin Logo Requirements
-- **Format**: SVG (recommended) or PNG
-- **Size**: 128x128px minimum, 256x256px recommended for PNG
-- **Background**: Transparent recommended
-- **File name**: Must be named `icon.svg` or `icon.png`
-- **Design**: Should be simple, clear, and work on both light and dark backgrounds
+## Usage with Team Library Styles
+
+**Important**: Due to Figma API limitations, this plugin cannot directly access team library styles (remote styles). If you're using the Atoms Design System from a team library, follow these steps:
+
+1. **Copy the frame or artboard** from your working file into the Atoms file (the file containing the local styles)
+2. **Run the plugin** in the Atoms file to change styles or themes
+3. **Copy the updated frame back** to your original file if needed
+
+This ensures the plugin has access to all Toyota, Lexus, and Subaru styles needed for brand switching.
 
 ## Limitations
 
+- **Cannot access team library styles directly** - Requires copying designs to the Atoms file first
 - Only works with named styles (not direct color applications)
-- Requires styles to follow the specific naming convention
+- Requires styles to follow the specific naming convention: `{Brand}/{Theme}/{StyleName}`
 - No network access (works offline only)
 - Limited to Toyota family brands (Toyota, Lexus, Subaru)
 
