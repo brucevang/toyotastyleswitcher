@@ -82,17 +82,9 @@ The plugin works with styles that follow this naming pattern:
 ## Installation
 
 1. Download the plugin files
-2. **Optional**: Add a custom logo by placing an `icon.svg` or `icon.png` file in the plugin directory
-3. In Figma, go to Plugins → Development → Import plugin from manifest
-4. Select the `manifest.json` file
-5. The plugin will appear in your Plugins menu
-
-### Plugin Logo Requirements
-- **Format**: SVG (recommended) or PNG
-- **Size**: 128x128px minimum, 256x256px recommended for PNG
-- **Background**: Transparent recommended
-- **File name**: Must be named `icon.svg` or `icon.png`
-- **Design**: Should be simple, clear, and work on both light and dark backgrounds
+2. In Figma, go to Plugins → Development → Import plugin from manifest
+3. Select the `manifest.json` file
+4. The plugin will appear in your Plugins menu
 
 ## Limitations
 
