@@ -591,7 +591,6 @@ async function changeBrandColors(data, fromBrand, targetTheme, targetLightDark) 
     if (targetLightDark) {
       message += ` (${capitalizeBrand(targetLightDark)} mode)`;
     }
-    message += '.';
     
     if (changedCount === 0) {
       if (targetLightDark) {
