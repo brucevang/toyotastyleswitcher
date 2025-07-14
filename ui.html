@@ -77,8 +77,9 @@
     .toast {
       position: fixed;
       bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%) translateY(200%);
+      left: 16px;
+      right: 16px;
+      transform: translateY(200%);
       background: #2C2C2C;
       color: white;
       padding: 12px 20px;
@@ -88,7 +89,6 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       z-index: 1000;
       transition: transform 0.3s ease;
-      max-width: 300px;
       text-align: left;
       display: flex;
       align-items: center;
@@ -96,7 +96,7 @@
     }
 
     .toast.show {
-      transform: translateX(-50%) translateY(0);
+      transform: translateY(0);
     }
 
     .toast.error {
@@ -138,8 +138,6 @@
       font-weight: 600;
       color: #333333;
       margin-bottom: 12px;
-      padding-bottom: 4px;
-      border-bottom: 1px solid #e5e5e5;
     }
 
     .brand-selector {
@@ -156,7 +154,7 @@
 
     .brand-dropdown {
       width: 100%;
-      padding: 8px 12px;
+      padding: 8px 20px 8px 12px;
       border: 1px solid #e0e0e0;
       border-radius: 6px;
       background: #ffffff;
@@ -190,7 +188,7 @@
 
     .theme-dropdown {
       width: 100%;
-      padding: 8px 12px;
+      padding: 8px 20px 8px 12px;
       border: 1px solid #e0e0e0;
       border-radius: 6px;
       background: #ffffff;
@@ -288,6 +286,54 @@
     .expand-button:active {
       background-color: #e0f2ff;
     }
+
+    .credit {
+      margin-top: 20px;
+      padding-top: 12px;
+      border-top: 1px solid #e5e5e5;
+      text-align: center;
+      font-size: 11px;
+      color: #999999;
+      font-weight: 400;
+    }
+
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+
+    .loading-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .loading-spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #18a0fb;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    .loading-text {
+      font-size: 14px;
+      color: #666666;
+      font-weight: 500;
+    }
   </style>
 </head>
 <body>
@@ -345,9 +391,19 @@
 
   <div id="toast" class="toast"></div>
 
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Processing changes...</div>
+  </div>
+
+  <div class="credit">
+    Created by OneApp UX Team 🐶
+  </div>
+
   <script>
     let currentData = null;
     let isStylesExpanded = false;
+    let isProcessing = false;
 
     function closePlugin() {
       parent.postMessage({ pluginMessage: { type: 'close' } }, '*');
@@ -383,6 +439,9 @@
         return;
       }
 
+      // Show loading indicator
+      showLoading();
+      
       // Send message to plugin to change styles
       parent.postMessage({ 
         pluginMessage: { 
@@ -418,6 +477,9 @@
         return;
       }
 
+      // Show loading indicator
+      showLoading();
+      
       // Send message to plugin to change theme
       parent.postMessage({ 
         pluginMessage: { 
@@ -436,9 +498,9 @@
       const selectedFromBrand = fromBrandSelect.value;
       const selectedToBrand = toBrandSelect.value;
       
-      // Enable button only if both brands are selected and they're different
+      // Enable button only if both brands are selected, they're different, and not processing
       const isValidSelection = selectedFromBrand && selectedToBrand && selectedFromBrand !== selectedToBrand;
-      changeBrandButton.disabled = !isValidSelection;
+      changeBrandButton.disabled = !isValidSelection || isProcessing;
     }
 
     function updateThemeButtonState() {
@@ -447,8 +509,8 @@
       
       const selectedLightDark = lightDarkSelect.value;
       
-      // Enable button only if a theme is selected
-      changeThemeButton.disabled = !selectedLightDark;
+      // Enable button only if a theme is selected and not processing
+      changeThemeButton.disabled = !selectedLightDark || isProcessing;
     }
 
     function getCurrentBrandsFromData() {
@@ -482,10 +544,14 @@
       if (isError) {
         toast.innerHTML = `
           <span class="toast-message">${escapeHtml(message)}</span>
-          <button class="toast-copy-btn" onclick="copyToastMessage('${escapeHtml(message).replace(/'/g, '\\\'')}')" title="Copy error message">Copy</button>
+          <button class="toast-copy-btn" onclick="copyToastMessage()" title="Copy error message">Copy</button>
         `;
+        // Store the original message for copying
+        toast.dataset.originalMessage = message;
       } else {
         toast.innerHTML = `<span class="toast-message">${escapeHtml(message)}</span>`;
+        // Clear any stored message
+        delete toast.dataset.originalMessage;
       }
       
       toast.className = `toast ${isError ? 'error' : ''}`;
@@ -523,22 +589,36 @@
       
       data.styles.forEach(nodeData => {
         nodeData.styles.forEach(style => {
+          let key, displayName;
+          
           if (style.styleName) {
-            // Use style name as key to ensure uniqueness
-            if (!uniqueStyles.has(style.styleName)) {
-              uniqueStyles.set(style.styleName, {
-                name: style.styleName,
-                hexColor: style.hexColor || '#000000',
-                color: style.color || { r: 0, g: 0, b: 0 },
-                styleType: style.styleType || 'color'
-              });
-            }
+            // Named style - use style name as key
+            key = style.styleName;
+            displayName = style.styleName;
+          } else if (style.hexColor) {
+            // Direct color - use hex color as key and display name
+            key = style.hexColor;
+            displayName = style.hexColor;
+          } else {
+            // Skip styles without name or color
+            return;
+          }
+          
+          // Use key to ensure uniqueness
+          if (!uniqueStyles.has(key)) {
+            uniqueStyles.set(key, {
+              name: displayName,
+              hexColor: style.hexColor || '#000000',
+              color: style.color || { r: 0, g: 0, b: 0 },
+              styleType: style.styleType || 'color',
+              isDirectColor: !style.styleName
+            });
           }
         });
       });
 
       if (uniqueStyles.size === 0) {
-        content.innerHTML = `<div class="error-message">No named styles found in the selected nodes.</div>`;
+        content.innerHTML = `<div class="error-message">No styles or colors found in the selected nodes.</div>`;
         return;
       }
 
@@ -548,7 +628,7 @@
       const sortedStyles = Array.from(uniqueStyles.values()).sort((a, b) => a.name.localeCompare(b.name));
       
       // Determine how many styles to show
-      const maxVisible = 6;
+      const maxVisible = 5;
       const shouldCollapse = sortedStyles.length > maxVisible;
       const stylesToShow = shouldCollapse && !isStylesExpanded ? sortedStyles.slice(0, maxVisible) : sortedStyles;
       
@@ -588,7 +668,39 @@
       renderStyles(currentData);
     }
 
-    function copyToastMessage(message) {
+    function showLoading() {
+      isProcessing = true;
+      const overlay = document.getElementById('loadingOverlay');
+      const changeBrandButton = document.getElementById('changeBrandButton');
+      const changeThemeButton = document.getElementById('changeThemeButton');
+      
+      overlay.classList.add('show');
+      changeBrandButton.disabled = true;
+      changeThemeButton.disabled = true;
+    }
+
+    function hideLoading() {
+      isProcessing = false;
+      const overlay = document.getElementById('loadingOverlay');
+      const changeBrandButton = document.getElementById('changeBrandButton');
+      const changeThemeButton = document.getElementById('changeThemeButton');
+      
+      overlay.classList.remove('show');
+      
+      // Re-enable buttons based on current state
+      updateBrandButtonState();
+      updateThemeButtonState();
+    }
+
+    function copyToastMessage() {
+      const toast = document.getElementById('toast');
+      const message = toast.dataset.originalMessage;
+      
+      if (!message) {
+        console.error('No message to copy');
+        return;
+      }
+      
       navigator.clipboard.writeText(message).then(() => {
         // Temporarily change button text to show success
         const copyBtn = document.querySelector('.toast-copy-btn');
@@ -629,8 +741,10 @@
         console.log('Received data:', message.data);
         renderStyles(message.data);
       } else if (message.type === 'brand-changed') {
+        hideLoading();
         showToast(message.message);
       } else if (message.type === 'error') {
+        hideLoading();
         showToast('❌ ' + message.message, true);
       }
     };

@@ -136,6 +136,36 @@ function rgbToHex(r, g, b) {
   }).join('');
 }
 
+// Helper function to safely convert style ID to string
+function convertStyleIdToString(styleId) {
+  try {
+    if (!styleId) {
+      return null;
+    }
+    
+    // If already a string, return as-is
+    if (typeof styleId === 'string') {
+      return styleId;
+    }
+    
+    // If it's a Symbol, try to convert it
+    if (typeof styleId === 'symbol') {
+      // Try to get the string representation of the symbol
+      const symbolString = styleId.toString();
+      console.log('Converted symbol to string:', symbolString);
+      return symbolString;
+    }
+    
+    // For other types, attempt string conversion
+    const converted = String(styleId);
+    console.log('Converted styleId to string:', converted);
+    return converted;
+  } catch (error) {
+    console.error('Error converting styleId to string:', error);
+    return null;
+  }
+}
+
 // Helper function to get style name from style ID
 async function getStyleName(styleId) {
   try {
@@ -143,20 +173,14 @@ async function getStyleName(styleId) {
     console.log('StyleId type:', typeof styleId);
     console.log('StyleId value:', styleId);
     
-    if (!styleId) {
-      console.log('StyleId is null/undefined');
+    // Use the utility function to safely convert styleId to string
+    const styleIdString = convertStyleIdToString(styleId);
+    if (!styleIdString) {
+      console.log('StyleId could not be converted to string');
       return null;
     }
     
-    // Check if styleId is a valid string
-    if (typeof styleId !== 'string') {
-      console.log('StyleId is not a string, converting...');
-      const stringStyleId = String(styleId);
-      console.log('Converted styleId:', stringStyleId);
-      styleId = stringStyleId;
-    }
-    
-    const style = await figma.getStyleByIdAsync(styleId);
+    const style = await figma.getStyleByIdAsync(styleIdString);
     console.log('Style found:', style);
     console.log('Style type:', typeof style);
     
@@ -326,25 +350,37 @@ async function findStylesInNode(node, referencedStyles) {
   // Check for fill style
   if (node.fillStyleId) {
     console.log('Found fillStyleId:', node.fillStyleId, 'type:', typeof node.fillStyleId);
-    referencedStyles.add(node.fillStyleId);
+    const fillStyleIdString = convertStyleIdToString(node.fillStyleId);
+    if (fillStyleIdString) {
+      referencedStyles.add(fillStyleIdString);
+    }
   }
   
   // Check for stroke style
   if (node.strokeStyleId) {
     console.log('Found strokeStyleId:', node.strokeStyleId, 'type:', typeof node.strokeStyleId);
-    referencedStyles.add(node.strokeStyleId);
+    const strokeStyleIdString = convertStyleIdToString(node.strokeStyleId);
+    if (strokeStyleIdString) {
+      referencedStyles.add(strokeStyleIdString);
+    }
   }
   
   // Check for text styles
   if (node.textStyleId) {
     console.log('Found textStyleId:', node.textStyleId, 'type:', typeof node.textStyleId);
-    referencedStyles.add(node.textStyleId);
+    const textStyleIdString = convertStyleIdToString(node.textStyleId);
+    if (textStyleIdString) {
+      referencedStyles.add(textStyleIdString);
+    }
   }
   
   // Check for effect styles
   if (node.effectStyleId) {
     console.log('Found effectStyleId:', node.effectStyleId, 'type:', typeof node.effectStyleId);
-    referencedStyles.add(node.effectStyleId);
+    const effectStyleIdString = convertStyleIdToString(node.effectStyleId);
+    if (effectStyleIdString) {
+      referencedStyles.add(effectStyleIdString);
+    }
   }
   
   // Recursively check children
@@ -496,9 +532,16 @@ async function changeStylesRecursive(nodes, targetPaintStyles, targetTextStyles,
   let changedCount = 0;
   
   for (const node of nodes) {
-    // Change fill styles
-    if (node.fillStyleId) {
-      const currentStyle = await figma.getStyleByIdAsync(node.fillStyleId);
+    try {
+      // Change fill styles
+      if (node.fillStyleId) {
+        const fillStyleIdString = convertStyleIdToString(node.fillStyleId);
+        if (!fillStyleIdString) {
+          console.log('Skipping node with invalid fillStyleId:', node.fillStyleId);
+          continue;
+        }
+        
+        const currentStyle = await figma.getStyleByIdAsync(fillStyleIdString);
       if (currentStyle && sourceBrands.some(brand => currentStyle.name.includes(`${brand}/`))) {
         let correspondingStyle = null;
         
@@ -534,7 +577,13 @@ async function changeStylesRecursive(nodes, targetPaintStyles, targetTextStyles,
     
     // Change stroke styles
     if (node.strokeStyleId) {
-      const currentStyle = await figma.getStyleByIdAsync(node.strokeStyleId);
+      const strokeStyleIdString = convertStyleIdToString(node.strokeStyleId);
+      if (!strokeStyleIdString) {
+        console.log('Skipping node with invalid strokeStyleId:', node.strokeStyleId);
+        continue;
+      }
+      
+      const currentStyle = await figma.getStyleByIdAsync(strokeStyleIdString);
       if (currentStyle && sourceBrands.some(brand => currentStyle.name.includes(`${brand}/`))) {
         let correspondingStyle = null;
         
@@ -570,7 +619,13 @@ async function changeStylesRecursive(nodes, targetPaintStyles, targetTextStyles,
     
     // Change text styles
     if (node.textStyleId) {
-      const currentStyle = await figma.getStyleByIdAsync(node.textStyleId);
+      const textStyleIdString = convertStyleIdToString(node.textStyleId);
+      if (!textStyleIdString) {
+        console.log('Skipping node with invalid textStyleId:', node.textStyleId);
+        continue;
+      }
+      
+      const currentStyle = await figma.getStyleByIdAsync(textStyleIdString);
       if (currentStyle && sourceBrands.some(brand => currentStyle.name.includes(`${brand}/`))) {
         let correspondingStyle = null;
         
@@ -604,9 +659,13 @@ async function changeStylesRecursive(nodes, targetPaintStyles, targetTextStyles,
       }
     }
     
-    // Recursively process children
-    if ('children' in node) {
-      changedCount += await changeStylesRecursive(node.children, targetPaintStyles, targetTextStyles, sourceBrands, targetTheme, targetLightDark);
+      // Recursively process children
+      if ('children' in node) {
+        changedCount += await changeStylesRecursive(node.children, targetPaintStyles, targetTextStyles, sourceBrands, targetTheme, targetLightDark);
+      }
+    } catch (error) {
+      console.error('Error processing node:', node.name, error);
+      // Continue processing other nodes even if one fails
     }
   }
   
