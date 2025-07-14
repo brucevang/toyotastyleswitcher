@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #ffffff;
+      color: #333333;
+      padding: 16px;
+    }
+
+    .header {
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333333;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: #666666;
+    }
+
+    .error-message {
+      background: #fff2f2;
+      border: 1px solid #ffcdd2;
+      border-radius: 6px;
+      padding: 12px;
+      color: #d32f2f;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    .styles-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .style-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      background: #ffffff;
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+    }
+
+    .color-swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      border: 1px solid #e0e0e0;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    .style-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: #333333;
+      flex: 1;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(200%);
+      background: #2C2C2C;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      transition: transform 0.3s ease;
+      max-width: 300px;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.error {
+      background: #f44336;
+    }
+
+    .toast-message {
+      flex: 1;
+    }
+
+    .toast-copy-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .toast-copy-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .toast-copy-btn:active {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .footer {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid #e5e5e5;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333333;
+      margin-bottom: 12px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .brand-selector {
+      margin-bottom: 12px;
+    }
+
+    .brand-selector label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: #666666;
+      margin-bottom: 4px;
+    }
+
+    .brand-dropdown {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      background: #ffffff;
+      font-size: 14px;
+      color: #333333;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .brand-dropdown:hover {
+      border-color: #18a0fb;
+    }
+
+    .brand-dropdown:focus {
+      outline: none;
+      border-color: #18a0fb;
+      box-shadow: 0 0 0 2px rgba(24, 160, 251, 0.2);
+    }
+
+    .theme-selector {
+      margin-bottom: 12px;
+    }
+
+    .theme-selector label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: #666666;
+      margin-bottom: 4px;
+    }
+
+    .theme-dropdown {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      background: #ffffff;
+      font-size: 14px;
+      color: #333333;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .theme-dropdown:hover {
+      border-color: #18a0fb;
+    }
+
+    .theme-dropdown:focus {
+      outline: none;
+      border-color: #18a0fb;
+      box-shadow: 0 0 0 2px rgba(24, 160, 251, 0.2);
+    }
+
+    .action-button {
+      margin-top: 16px;
+    }
+
+    .change-btn {
+      width: 100%;
+      padding: 12px 16px;
+      background: #18a0fb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .change-btn:hover:not(:disabled) {
+      background: #0d8ce6;
+    }
+
+    .change-btn:disabled {
+      background: #CCCCCC;
+      color: #999999;
+      cursor: not-allowed;
+    }
+
+
+
+    .loading {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666666;
+    }
+
+    .spinner {
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #18a0fb;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .style-icon {
+      font-size: 16px;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    .expand-button {
+      width: 100%;
+      padding: 8px 12px;
+      background: transparent;
+      border: none;
+      color: #18a0fb;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      transition: background-color 0.2s ease;
+      border-radius: 4px;
+      margin-top: 4px;
+    }
+
+    .expand-button:hover {
+      background-color: #f0f8ff;
+    }
+
+    .expand-button:active {
+      background-color: #e0f2ff;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">Toyota Style Switcher</div>
+    <div class="subtitle">Select a frame or component and change brands and themes. Only works with Atoms Design System.</div>
+  </div>
+
+  <div id="content">
+    <div class="loading">
+      <div class="spinner"></div>
+      <div>Loading color styles...</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="section-title">Brand Change</div>
+    <div class="brand-selector">
+      <label for="fromBrandSelect">From Brand:</label>
+      <select id="fromBrandSelect" class="brand-dropdown" onchange="updateBrandButtonState()">
+        <option value="">Select From Brand</option>
+        <option value="toyota">Toyota</option>
+        <option value="lexus">Lexus</option>
+        <option value="subaru">Subaru</option>
+      </select>
+    </div>
+    <div class="brand-selector">
+      <label for="toBrandSelect">To Brand:</label>
+      <select id="toBrandSelect" class="brand-dropdown" onchange="updateBrandButtonState()">
+        <option value="">Select To Brand</option>
+        <option value="toyota">Toyota</option>
+        <option value="lexus">Lexus</option>
+        <option value="subaru">Subaru</option>
+      </select>
+    </div>
+    <div class="action-button">
+      <button id="changeBrandButton" class="change-btn" onclick="onChangeBrand()" disabled>Change Brand</button>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="section-title">Theme Change</div>
+    <div class="theme-selector">
+      <label for="lightDarkSelect">Theme:</label>
+      <select id="lightDarkSelect" class="theme-dropdown" onchange="updateThemeButtonState()">
+        <option value="">Select Theme</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+    </div>
+    <div class="action-button">
+      <button id="changeThemeButton" class="change-btn" onclick="onChangeTheme()" disabled>Change Theme</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    let currentData = null;
+    let isStylesExpanded = false;
+
+    function closePlugin() {
+      parent.postMessage({ pluginMessage: { type: 'close' } }, '*');
+    }
+
+    function onChangeBrand() {
+      if (!currentData || !currentData.styles) {
+        console.log('No data available for brand change');
+        return;
+      }
+
+      // Get selected values
+      const fromBrandSelect = document.getElementById('fromBrandSelect');
+      const toBrandSelect = document.getElementById('toBrandSelect');
+      const selectedFromBrand = fromBrandSelect.value;
+      const selectedToBrand = toBrandSelect.value;
+      
+      // Validate selections
+      if (!selectedFromBrand || !selectedToBrand) {
+        showToast('Please select both "From" and "To" brands', true);
+        return;
+      }
+
+      if (selectedFromBrand === selectedToBrand) {
+        showToast('From and To brands must be different', true);
+        return;
+      }
+
+      // Check if the selected "from" brand exists in the current selection
+      const currentBrands = getCurrentBrandsFromData();
+      if (!currentBrands.includes(selectedFromBrand)) {
+        showToast(`No ${selectedFromBrand} styles found in the selected elements`, true);
+        return;
+      }
+
+      // Send message to plugin to change styles
+      parent.postMessage({ 
+        pluginMessage: { 
+          type: 'change-brand',
+          data: currentData,
+          fromBrand: selectedFromBrand,
+          targetTheme: selectedToBrand,
+          targetLightDark: null
+        } 
+      }, '*');
+    }
+
+    function onChangeTheme() {
+      if (!currentData || !currentData.styles) {
+        console.log('No data available for theme change');
+        return;
+      }
+
+      // Get selected values
+      const lightDarkSelect = document.getElementById('lightDarkSelect');
+      const selectedLightDark = lightDarkSelect.value;
+      
+      // Validate selections
+      if (!selectedLightDark) {
+        showToast('Please select a theme', true);
+        return;
+      }
+
+      // Check if there are any brand styles in the current selection
+      const currentBrands = getCurrentBrandsFromData();
+      if (currentBrands.length === 0) {
+        showToast('No brand styles found in the selected elements', true);
+        return;
+      }
+
+      // Send message to plugin to change theme
+      parent.postMessage({ 
+        pluginMessage: { 
+          type: 'change-theme',
+          data: currentData,
+          targetLightDark: selectedLightDark
+        } 
+      }, '*');
+    }
+
+    function updateBrandButtonState() {
+      const fromBrandSelect = document.getElementById('fromBrandSelect');
+      const toBrandSelect = document.getElementById('toBrandSelect');
+      const changeBrandButton = document.getElementById('changeBrandButton');
+      
+      const selectedFromBrand = fromBrandSelect.value;
+      const selectedToBrand = toBrandSelect.value;
+      
+      // Enable button only if both brands are selected and they're different
+      const isValidSelection = selectedFromBrand && selectedToBrand && selectedFromBrand !== selectedToBrand;
+      changeBrandButton.disabled = !isValidSelection;
+    }
+
+    function updateThemeButtonState() {
+      const lightDarkSelect = document.getElementById('lightDarkSelect');
+      const changeThemeButton = document.getElementById('changeThemeButton');
+      
+      const selectedLightDark = lightDarkSelect.value;
+      
+      // Enable button only if a theme is selected
+      changeThemeButton.disabled = !selectedLightDark;
+    }
+
+    function getCurrentBrandsFromData() {
+      if (!currentData || !currentData.styles) {
+        return [];
+      }
+
+      // Check what brand styles are currently applied (both color and text)
+      const brands = new Set();
+      currentData.styles.forEach(nodeData => {
+        nodeData.styles.forEach(style => {
+          if (style.styleName) {
+            if (style.styleName.includes('Toyota/')) {
+              brands.add('toyota');
+            } else if (style.styleName.includes('Lexus/')) {
+              brands.add('lexus');
+            } else if (style.styleName.includes('Subaru/')) {
+              brands.add('subaru');
+            }
+          }
+        });
+      });
+
+      return Array.from(brands);
+    }
+
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      
+      // Create HTML structure with copy button for errors
+      if (isError) {
+        toast.innerHTML = `
+          <span class="toast-message">${escapeHtml(message)}</span>
+          <button class="toast-copy-btn" onclick="copyToastMessage('${escapeHtml(message).replace(/'/g, '\\\'')}')" title="Copy error message">Copy</button>
+        `;
+      } else {
+        toast.innerHTML = `<span class="toast-message">${escapeHtml(message)}</span>`;
+      }
+      
+      toast.className = `toast ${isError ? 'error' : ''}`;
+      
+      // Show the toast
+      setTimeout(() => {
+        toast.classList.add('show');
+      }, 100);
+      
+      // Hide the toast - longer duration for errors
+      const duration = isError ? 8000 : 3000;
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, duration);
+    }
+
+    function renderStyles(data) {
+      const content = document.getElementById('content');
+      
+      // Store current data for brand change functionality
+      currentData = data;
+      
+      if (data.error) {
+        content.innerHTML = `<div class="error-message">${data.error}</div>`;
+        return;
+      }
+
+      if (!data.styles || data.styles.length === 0) {
+        content.innerHTML = `<div class="error-message">No styles found in the selected nodes.</div>`;
+        return;
+      }
+
+      // Collect unique styles with their colors
+      const uniqueStyles = new Map();
+      
+      data.styles.forEach(nodeData => {
+        nodeData.styles.forEach(style => {
+          if (style.styleName) {
+            // Use style name as key to ensure uniqueness
+            if (!uniqueStyles.has(style.styleName)) {
+              uniqueStyles.set(style.styleName, {
+                name: style.styleName,
+                hexColor: style.hexColor || '#000000',
+                color: style.color || { r: 0, g: 0, b: 0 },
+                styleType: style.styleType || 'color'
+              });
+            }
+          }
+        });
+      });
+
+      if (uniqueStyles.size === 0) {
+        content.innerHTML = `<div class="error-message">No named styles found in the selected nodes.</div>`;
+        return;
+      }
+
+      let html = '<div class="styles-list">';
+      
+      // Sort styles alphabetically
+      const sortedStyles = Array.from(uniqueStyles.values()).sort((a, b) => a.name.localeCompare(b.name));
+      
+      // Determine how many styles to show
+      const maxVisible = 6;
+      const shouldCollapse = sortedStyles.length > maxVisible;
+      const stylesToShow = shouldCollapse && !isStylesExpanded ? sortedStyles.slice(0, maxVisible) : sortedStyles;
+      
+      stylesToShow.forEach(style => {
+        html += `
+          <div class="style-item">
+            <div class="color-swatch" style="background-color: ${style.hexColor}"></div>
+            <div class="style-name">${escapeHtml(style.name)}</div>
+          </div>
+        `;
+      });
+      
+      // Add expand/collapse button if needed
+      if (shouldCollapse) {
+        const hiddenCount = sortedStyles.length - maxVisible;
+        if (!isStylesExpanded) {
+          html += `<button class="expand-button" onclick="toggleStylesExpansion()">View +${hiddenCount} more styles</button>`;
+        } else {
+          html += `<button class="expand-button" onclick="toggleStylesExpansion()">Show less</button>`;
+        }
+      }
+      
+      html += '</div>';
+
+      content.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function toggleStylesExpansion() {
+      isStylesExpanded = !isStylesExpanded;
+      // Re-render the styles with the new expansion state
+      renderStyles(currentData);
+    }
+
+    function copyToastMessage(message) {
+      navigator.clipboard.writeText(message).then(() => {
+        // Temporarily change button text to show success
+        const copyBtn = document.querySelector('.toast-copy-btn');
+        if (copyBtn) {
+          const originalText = copyBtn.textContent;
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => {
+            copyBtn.textContent = originalText;
+          }, 1000);
+        }
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+        // Fallback for browsers that don't support clipboard API
+        const textArea = document.createElement('textarea');
+        textArea.value = message;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        // Show success feedback
+        const copyBtn = document.querySelector('.toast-copy-btn');
+        if (copyBtn) {
+          const originalText = copyBtn.textContent;
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => {
+            copyBtn.textContent = originalText;
+          }, 1000);
+        }
+      });
+    }
+
+    // Listen for messages from the plugin
+    window.onmessage = (event) => {
+      const message = event.data.pluginMessage;
+      
+      if (message.type === 'initial-data' || message.type === 'selection-updated') {
+        console.log('Received data:', message.data);
+        renderStyles(message.data);
+      } else if (message.type === 'brand-changed') {
+        showToast(message.message);
+      } else if (message.type === 'error') {
+        showToast('❌ ' + message.message, true);
+      }
+    };
+  </script>
+</body>
+</html> 
