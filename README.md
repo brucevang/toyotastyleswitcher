@@ -2,6 +2,31 @@
 
 A Figma plugin that allows designers to quickly switch between Toyota, Lexus, and Subaru brand styles and light/dark themes for selected design elements.
 
+## Installation
+
+1. Download the plugin files
+2. In Figma, go to Plugins → Development → Import plugin from manifest
+3. Select the `manifest.json` file
+4. The plugin will appear in your Plugins menu
+
+## Usage with Team Library Styles
+
+**Important**: Due to Figma API limitations, this plugin cannot directly access team library styles (remote styles). If you're using the Atoms Design System from a team library, follow these steps:
+
+1. **Copy the frame or artboard** from your working file into the Atoms file (the file containing the local styles)
+2. **Run the plugin** in the Atoms file to change styles or themes
+3. **Copy the updated frame back** to your original file if needed
+
+This ensures the plugin has access to all Toyota, Lexus, and Subaru styles needed for brand switching.
+
+## Limitations
+
+- **Cannot access team library styles directly** - Requires copying designs to the Atoms file first
+- Only works with named styles (not direct color applications)
+- Requires styles to follow the specific naming convention: `{Brand}/{Theme}/{StyleName}`
+- No network access (works offline only)
+- Limited to Toyota family brands (Toyota, Lexus, Subaru)
+
 ## Overview
 
 The Toyota Style Switcher plugin streamlines the process of adapting designs across different automotive brands within the Toyota family. It automatically identifies and replaces brand-specific color and text styles while maintaining design integrity.
@@ -55,54 +80,6 @@ The plugin works with styles that follow this naming pattern:
    - **Theme Change**: Select desired theme (Light/Dark), then click "Change Theme"
 4. **Review Results**: The plugin provides feedback on successful changes and any issues
 
-## Requirements
-
-- **Design System**: Works specifically with the Atoms Design System
-- **Style Structure**: Requires properly named styles following the brand/theme convention
-- **Figma Version**: Compatible with current Figma plugin API
-
-## Technical Details
-
-### Architecture
-- **Plugin Code** (`code.js`): Handles Figma API interactions and style processing
-- **User Interface** (`ui.html`): Provides interactive controls and visual feedback
-- **Manifest** (`manifest.json`): Defines plugin configuration and permissions
-
-### Key Functions
-- **Style Detection**: Recursively finds all color and text styles in selected elements
-- **Smart Mapping**: Automatically maps styles between brands and themes
-- **Error Recovery**: Handles Symbol-type style IDs and API failures gracefully
-- **Batch Processing**: Efficiently processes multiple elements and nested children
-
-### Performance Features
-- **Lazy Loading**: Only processes visible elements initially
-- **Error Isolation**: Continues processing even if individual elements fail
-- **Memory Efficient**: Handles large selections without performance degradation
-
-## Installation
-
-1. Download the plugin files
-2. In Figma, go to Plugins → Development → Import plugin from manifest
-3. Select the `manifest.json` file
-4. The plugin will appear in your Plugins menu
-
-## Usage with Team Library Styles
-
-**Important**: Due to Figma API limitations, this plugin cannot directly access team library styles (remote styles). If you're using the Atoms Design System from a team library, follow these steps:
-
-1. **Copy the frame or artboard** from your working file into the Atoms file (the file containing the local styles)
-2. **Run the plugin** in the Atoms file to change styles or themes
-3. **Copy the updated frame back** to your original file if needed
-
-This ensures the plugin has access to all Toyota, Lexus, and Subaru styles needed for brand switching.
-
-## Limitations
-
-- **Cannot access team library styles directly** - Requires copying designs to the Atoms file first
-- Only works with named styles (not direct color applications)
-- Requires styles to follow the specific naming convention: `{Brand}/{Theme}/{StyleName}`
-- No network access (works offline only)
-- Limited to Toyota family brands (Toyota, Lexus, Subaru)
 
 ## Troubleshooting
 
