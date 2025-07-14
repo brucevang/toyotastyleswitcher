@@ -577,21 +577,27 @@ async function changeBrandColors(data, fromBrand, targetTheme, targetLightDark) 
     
     console.log('Brand change completed. Changed', changedCount, 'styles.');
     
+    // Helper function to capitalize brand names
+    function capitalizeBrand(brand) {
+      if (!brand) return brand;
+      return brand.charAt(0).toUpperCase() + brand.slice(1).toLowerCase();
+    }
+    
     // Notify the UI of the change
     let message = `Successfully changed ${changedCount} styles`;
     if (targetTheme) {
-      message += ` to ${targetTheme} theme`;
+      message += ` to ${capitalizeBrand(targetTheme)} theme`;
     }
     if (targetLightDark) {
-      message += ` (${targetLightDark} mode)`;
+      message += ` (${capitalizeBrand(targetLightDark)} mode)`;
     }
     message += '.';
     
     if (changedCount === 0) {
       if (targetLightDark) {
-        message = `No styles were changed. All styles are already using the ${targetLightDark} theme.`;
+        message = `No styles were changed. All styles are already using the ${capitalizeBrand(targetLightDark)} theme.`;
       } else {
-        message = `No styles were changed. All styles are already using the ${targetTheme} theme.`;
+        message = `No styles were changed. All styles are already using the ${capitalizeBrand(targetTheme)} theme.`;
       }
     }
     

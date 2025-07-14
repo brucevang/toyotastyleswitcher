@@ -435,7 +435,8 @@
       // Check if the selected "from" brand exists in the current selection
       const currentBrands = getCurrentBrandsFromData();
       if (!currentBrands.includes(selectedFromBrand)) {
-        showToast(`No ${selectedFromBrand} styles found in the selected elements`, true);
+        const capitalizedBrand = selectedFromBrand.charAt(0).toUpperCase() + selectedFromBrand.slice(1).toLowerCase();
+        showToast(`No ${capitalizedBrand} styles found in the selected elements`, true);
         return;
       }
 
